@@ -1,5 +1,5 @@
-{-# LANGUAGE NoImplicitPrelude #-}
 {-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE NoImplicitPrelude #-}
 
 module Course.Optional where
 
@@ -11,8 +11,8 @@ import qualified Prelude as P
 -- | The `Optional` data type contains 0 or 1 value.
 --
 -- It might be thought of as a list, with a maximum length of one.
-data Optional a =
-  Full a
+data Optional a
+  = Full a
   | Empty
   deriving (Eq, Show)
 
@@ -24,11 +24,11 @@ data Optional a =
 -- >>> fullOr 99 Empty
 -- 99
 fullOr ::
+  a ->
+  Optional a ->
   a
-  -> Optional a
-  -> a
-fullOr =
-  error "todo: Course.Optional#fullOr"
+fullOr _ (Full x) = x
+fullOr x _ = x
 
 -- | Map the given function on the possible value.
 --
@@ -38,11 +38,11 @@ fullOr =
 -- >>> mapOptional (+1) (Full 8)
 -- Full 9
 mapOptional ::
-  (a -> b)
-  -> Optional a
-  -> Optional b
-mapOptional =
-  error "todo: Course.Optional#mapOptional"
+  (a -> b) ->
+  Optional a ->
+  Optional b
+mapOptional _ Empty = Empty
+mapOptional f (Full x) = Full $ f x
 
 -- | Bind the given function on the possible value.
 --
@@ -55,11 +55,11 @@ mapOptional =
 -- >>> bindOptional (\n -> if even n then Full (n - 1) else Full (n + 1)) (Full 9)
 -- Full 10
 bindOptional ::
-  (a -> Optional b)
-  -> Optional a
-  -> Optional b
-bindOptional =
-  error "todo: Course.Optional#bindOptional"
+  (a -> Optional b) ->
+  Optional a ->
+  Optional b
+bindOptional _ Empty = Empty
+bindOptional f (Full x) = f x
 
 -- | Try the first optional for a value. If it has a value, use it; otherwise,
 -- use the second value.
@@ -76,11 +76,11 @@ bindOptional =
 -- >>> Empty <+> Empty
 -- Empty
 (<+>) ::
+  Optional a ->
+  Optional a ->
   Optional a
-  -> Optional a
-  -> Optional a
-(<+>) =
-  error "todo: Course.Optional#(<+>)"
+(<+>) (Full x) _ = Full x
+(<+>) _ y = y
 
 -- | Replaces the Full and Empty constructors in an optional.
 --
@@ -90,22 +90,22 @@ bindOptional =
 -- >>> optional (+1) 0 Empty
 -- 0
 optional ::
-  (a -> b)
-  -> b
-  -> Optional a
-  -> b
-optional =
-  error "todo: Course.Optional#optional"
+  (a -> b) ->
+  b ->
+  Optional a ->
+  b
+optional _ x Empty = x
+optional f _ (Full x) = f x
 
 applyOptional :: Optional (a -> b) -> Optional a -> Optional b
-applyOptional f a = bindOptional (\f' -> mapOptional f' a) f
+applyOptional f x = bindOptional (`mapOptional` x) f
 
 twiceOptional :: (a -> b -> c) -> Optional a -> Optional b -> Optional c
 twiceOptional f = applyOptional . mapOptional f
 
 contains :: Eq a => a -> Optional a -> Bool
 contains _ Empty = False
-contains a (Full z) = a == z
+contains x (Full y) = x == y
 
 instance P.Functor Optional where
   fmap =
